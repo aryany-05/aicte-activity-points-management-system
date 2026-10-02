@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block title %}User Management - AICTE Points Ledger{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="page-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="registry-kicker">
+                <i data-lucide="shield"></i>
+                <span>System Administration</span>
+            </div>
+            <h1 class="registry-main-title">User Management</h1>
+            <p class="text-muted mt-1" style="font-size: 0.9375rem;">
+                Registered user accounts directory across students, clubs, and administrators.
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline btn-sm">
+                <i data-lucide="arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- ===== TOOLBAR: ROLE TABS & INSTANT SEARCH ===== -->
+    <div class="registry-toolbar-container mb-4">
+        <div class="registry-toolbar-row">
+            <!-- Role Filter Tabs -->
+            <div class="registry-tabs-group">
+                <a href="{{ url_for('admin.view_users', role='all') }}" class="registry-tab {% if current_filter == 'all' %}active{% endif %}">
+                    <i data-lucide="users"></i>
+                    <span>All Accounts</span>
+                </a>
+                <a href="{{ url_for('admin.view_users', role='student') }}" class="registry-tab {% if current_filter == 'student' %}active{% endif %}">
+                    <i data-lucide="graduation-cap"></i>
+                    <span>Students</span>
+                </a>
+                <a href="{{ url_for('admin.view_users', role='club') }}" class="registry-tab {% if current_filter == 'club' %}active{% endif %}">
+                    <i data-lucide="building"></i>
+                    <span>Clubs</span>
+                </a>
+                <a href="{{ url_for('admin.view_users', role='admin') }}" class="registry-tab {% if current_filter == 'admin' %}active{% endif %}">
+                    <i data-lucide="shield-check"></i>
+                    <span>Administrators</span>
+                </a>
+            </div>
+
+            <!-- Client-side Search Filter -->
+            <div class="registry-search-box" style="position: relative; min-width: 280px;">
+                <input type="text" id="userDirectorySearch" class="form-control form-control-sm"
+                       placeholder="Filter by name, username, roll, or email..."
+                       aria-label="Filter users by keyword">
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== USER DIRECTORY LEDGER CARD ===== -->
+    <div class="card p-0 mb-4">
+        <div class="card-header-clean">
+            <div class="header-title-wrap">
+                <span class="header-icon-pill"><i data-lucide="users"></i></span>
+                <div>
+                    <h2 class="card-heading">
+                        {% if current_filter == 'student' %}Student Directory
+                        {% elif current_filter == 'club' %}Club Directory
+                        {% elif current_filter == 'admin' %}Administrator Directory
+                        {% else %}Account Directory{% endif %}
+                    </h2>
+                    <p class="card-caption">
+                        Displaying registered accounts under current filter
+                    </p>
+                </div>
+            </div>
+            <div>
+                <span class="badge-count" id="userTotalBadge">{{ users|length }} User{{ 's' if users|length != 1 else '' }}</span>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            {% if users %}
+            <div class="table-responsive">
+                <table class="table-ledger mb-0" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 8%;">ID</th>
+                            <th style="width: 14%;">Role</th>
+                            <th style="width: 32%;">User Identity</th>
+                            <th style="width: 28%;">Department / Organization Details</th>
+                            <th style="width: 18%; text-align: right;">Registration Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sysuser in users %}
+                        <tr class="user-row" data-search="{{ sysuser.full_name|lower }} {{ sysuser.username|lower }} {{ sysuser.email|lower }} {{ (sysuser.department or '')|lower }} {{ (sysuser.roll_number or '')|lower }} {{ (sysuser.club_name or '')|lower }}">
+                            <td>
+                                <span class="font-bold" style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.8125rem;">
+                                    #{{ sysuser.id }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if sysuser.role == 'student' %}
+                                    <span class="role-pill role-student">
+                                        <i data-lucide="graduation-cap"></i> Student
+                                    </span>
+                                {% elif sysuser.role == 'club' %}
+                                    <span class="role-pill role-club">
+                                        <i data-lucide="building"></i> Club
+                                    </span>
+                                {% elif sysuser.role == 'admin' %}
+                                    <span class="role-pill role-admin">
+                                        <i data-lucide="shield-check"></i> Admin
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="font-bold text-heading">{{ sysuser.full_name }}</div>
+                                <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+                                    <span class="text-muted small" style="font-family: var(--font-mono);">
+                                        @{{ sysuser.username }}
+                                    </span>
+                                    <span class="text-muted small">&bull;</span>
+                                    <a href="mailto:{{ sysuser.email }}" class="text-muted small d-inline-flex align-items-center gap-1" style="text-decoration: none;" title="Send email to {{ sysuser.email }}">
+                                        <i data-lucide="mail" style="width: 12px; height: 12px;"></i>
+                                        <span>{{ sysuser.email }}</span>
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                {% if sysuser.role == 'student' %}
+                                    <div class="font-medium text-body small">
+                                        {{ sysuser.department or 'Department Unspecified' }}
+                                    </div>
+                                    <div class="text-muted small mt-1" style="font-family: var(--font-mono);">
+                                        Roll: {{ sysuser.roll_number or 'N/A' }}
+                                    </div>
+                                {% elif sysuser.role == 'club' %}
+                                    <div class="font-medium text-body small">
+                                        {{ sysuser.club_name or 'Club Unspecified' }}
+                                    </div>
+                                    {% if sysuser.club_description %}
+                                    <div class="text-muted small mt-1 line-clamp-1" title="{{ sysuser.club_description }}">
+                                        {{ sysuser.club_description }}
+                                    </div>
+                                    {% endif %}
+                                {% elif sysuser.role == 'admin' %}
+                                    <div class="text-muted small">
+                                        System Administrator
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <span class="text-body small" style="font-family: var(--font-mono);">
+                                    {{ sysuser.created_at.strftime('%b %d, %Y') if sysuser.created_at else 'Unknown' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center text-muted">
+                <div class="empty-state-icon mb-3">
+                    <i data-lucide="users"></i>
+                </div>
+                <div class="font-bold text-heading" style="font-size: 1.05rem;">No Users Found</div>
+                <p class="text-muted mt-1 mb-0" style="font-size: 0.875rem; max-width: 420px; margin: 0 auto; line-height: 1.5;">
+                    No registered accounts matching the current role filter were found in the database.
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Dynamic empty state when search filters out all rows -->
+            <div id="noUserResults" class="p-5 text-center text-muted" style="display: none;">
+                <div class="empty-state-icon mb-3" style="background-color: var(--bg-surface-elevated); color: var(--text-muted); border-color: var(--border-subtle);">
+                    <i data-lucide="search-x"></i>
+                </div>
+                <div class="font-bold text-heading" style="font-size: 1.05rem;">No Matching Accounts</div>
+                <p class="text-muted mt-1 mb-0" style="font-size: 0.875rem;">
+                    No user accounts match your search filter.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('userDirectorySearch');
+    const rows = document.querySelectorAll('.user-row');
+    const noResults = document.getElementById('noUserResults');
+    const table = document.getElementById('usersTable');
+    const badge = document.getElementById('userTotalBadge');
+
+    if (searchInput && rows.length > 0) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            let visibleCount = 0;
+
+            rows.forEach(function(row) {
+                const searchData = row.getAttribute('data-search') || '';
+                if (!query || searchData.includes(query)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (noResults && table) {
+                if (visibleCount === 0 && query) {
+                    noResults.style.display = 'block';
+                    table.style.display = 'none';
+                } else {
+                    noResults.style.display = 'none';
+                    table.style.display = '';
+                }
+            }
+
+            if (badge) {
+                badge.textContent = visibleCount + (visibleCount === 1 ? ' User' : ' Users');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

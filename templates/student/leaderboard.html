@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Activity Points Leaderboard - AICTE Points Ledger{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="page-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="registry-kicker">
+                <i data-lucide="award"></i>
+                <span>{% if current_user.role == 'admin' %}Administration{% else %}Student Activity{% endif %}</span>
+            </div>
+            <h1 class="registry-main-title">Activity Points Leaderboard</h1>
+            <p class="text-muted mt-1" style="font-size: 0.9375rem;">
+                Student ranking based on recorded activity points and participation.
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline btn-sm">
+                <i data-lucide="arrow-left"></i> Back to Dashboard
+            </a>
+            {% else %}
+            <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline btn-sm">
+                <i data-lucide="arrow-left"></i> Back to Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ===== LEADERBOARD LEDGER CARD ===== -->
+    <div class="card p-0 mb-4">
+        <div class="card-header-clean">
+            <div class="header-title-wrap">
+                <span class="header-icon-pill"><i data-lucide="award"></i></span>
+                <div>
+                    <h2 class="card-heading">Institutional Standings</h2>
+                    <p class="card-caption">Students ranked by total accumulated activity points</p>
+                </div>
+            </div>
+            <div>
+                <span class="badge-count">{{ rankings|length }} Student{{ 's' if rankings|length != 1 else '' }} Ranked</span>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            {% if rankings %}
+            <div class="table-responsive">
+                <table class="table-ledger mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 10%; text-align: center;">Rank</th>
+                            <th scope="col" style="width: 38%;">Student Identity</th>
+                            <th scope="col" style="width: 24%;">Department</th>
+                            <th scope="col" style="width: 14%; text-align: center;">Activities Attended</th>
+                            <th scope="col" style="width: 14%; text-align: right;">Activity Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in rankings %}
+                        <tr class="{% if current_user_id == student.id %}highlight-row{% endif %}">
+                            <td class="leaderboard-rank-cell" style="text-align: center;">
+                                <span class="rank-badge {% if loop.index == 1 %}rank-first{% elif loop.index == 2 %}rank-second{% elif loop.index == 3 %}rank-third{% endif %}">{{ loop.index }}</span>
+                            </td>
+                            <td>
+                                <div class="font-bold text-heading" style="font-size: 0.9375rem;">
+                                    {{ student.full_name }}
+                                    {% if current_user_id == student.id %}
+                                    <span class="badge-subtle" style="margin-left: 0.5rem; font-size: 0.6875rem; vertical-align: middle; color: var(--brand-brass); border-color: var(--brand-brass-border); background-color: var(--brand-brass-bg);">You</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small" style="font-family: var(--font-mono); margin-top: 2px;">
+                                    {{ student.roll_number }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-body" style="font-size: 0.875rem;">
+                                    {{ student.department or 'General' }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="chip-mono" style="display: inline-block; min-width: 32px; padding: 0.2rem 0.6rem; border-radius: var(--radius-xs); background-color: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); font-size: 0.8125rem; font-family: var(--font-mono);">
+                                    {{ student.events_attended }}
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <span class="font-bold" style="font-family: var(--font-mono); font-size: 1.0625rem; color: var(--brand-brass);">
+                                    {{ student.total_points }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state p-5 text-center">
+                <div class="empty-state-icon mb-3">
+                    <i data-lucide="award"></i>
+                </div>
+                <h3 style="font-family: var(--font-serif); font-size: 1.25rem; color: var(--text-heading); margin-bottom: 0.5rem;">No Activity Records Found</h3>
+                <p class="text-muted mb-0" style="font-size: 0.875rem;">Points have not been awarded to students yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

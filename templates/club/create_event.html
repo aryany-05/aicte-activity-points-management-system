@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% block title %}Create Activity - AICTE Points Ledger{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- ===== WORKSPACE PAGE HEADER ===== -->
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="registry-kicker">
+                <i data-lucide="calendar-plus"></i>
+                <span>Activity Proposal Workspace</span>
+            </div>
+            <h1 class="registry-main-title">Create Activity</h1>
+            <p class="text-muted" style="font-size: 0.875rem; margin-top: 0.25rem;">
+                Submit an activity proposal for administrative review. Approved events are published to the Student Activity Registry.
+            </p>
+        </div>
+        <a href="{{ url_for('club.dashboard') }}" class="btn btn-outline btn-sm">
+            <i data-lucide="arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- ===== PROPOSAL FORM CARD ===== -->
+    <div class="proposal-workspace">
+        <form method="POST" action="{{ url_for('club.create_event') }}" class="proposal-card">
+            
+            <!-- SECTION 1: ACTIVITY DETAILS -->
+            <div class="proposal-section">
+                <div class="proposal-section-header">
+                    <div class="proposal-section-icon">
+                        <i data-lucide="file-text"></i>
+                    </div>
+                    <div>
+                        <h2 class="proposal-section-title">Activity Details</h2>
+                        <p class="proposal-section-caption">
+                            Specify the official event title, primary category domain, and a descriptive summary.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="proposal-grid">
+                    <!-- Title -->
+                    <div class="form-group proposal-grid-full">
+                        <div class="form-label-row">
+                            <label for="title" class="form-label">Activity Title</label>
+                            <span class="label-required">* Required</span>
+                        </div>
+                        <div class="input-with-icon">
+                            <i data-lucide="type" class="input-icon-prefix"></i>
+                            <input type="text" 
+                                   id="title" 
+                                   name="title" 
+                                   class="form-control" 
+                                   placeholder="e.g. Annual Technical Hackathon 2026"
+                                   value="{{ data.get('title', '') }}" 
+                                   maxlength="200"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Category / Domain -->
+                    <div class="form-group proposal-grid-full">
+                        <div class="form-label-row">
+                            <label for="category" class="form-label">Activity Domain</label>
+                            <span class="label-required">* Required</span>
+                        </div>
+                        <div class="input-with-icon">
+                            <i data-lucide="layers" class="input-icon-prefix"></i>
+                            <select id="category" name="category" class="form-control" required>
+                                <option value="">Select Domain...</option>
+                                <option value="technical" {% if data.get('category') == 'technical' %}selected{% endif %}>Technical &amp; Engineering</option>
+                                <option value="cultural" {% if data.get('category') == 'cultural' %}selected{% endif %}>Cultural &amp; Literary Arts</option>
+                                <option value="social" {% if data.get('category') == 'social' %}selected{% endif %}>Social &amp; Community Outreach</option>
+                                <option value="sports" {% if data.get('category') == 'sports' %}selected{% endif %}>Sports &amp; Physical Athletics</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group proposal-grid-full">
+                        <div class="form-label-row">
+                            <label for="description" class="form-label">Activity Description</label>
+                        </div>
+                        <textarea id="description" 
+                                  name="description" 
+                                  class="form-control" 
+                                  rows="4" 
+                                  placeholder="Provide schedule details, prerequisites, workshop objectives, and expected student takeaways...">{{ data.get('description', '') }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: SCHEDULE & LOCATION -->
+            <div class="proposal-section">
+                <div class="proposal-section-header">
+                    <div class="proposal-section-icon">
+                        <i data-lucide="calendar-clock"></i>
+                    </div>
+                    <div>
+                        <h2 class="proposal-section-title">Schedule &amp; Location</h2>
+                        <p class="proposal-section-caption">
+                            Define the scheduled event date, starting time, and campus venue.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="proposal-grid">
+                    <!-- Date -->
+                    <div class="form-group">
+                        <div class="form-label-row">
+                            <label for="event_date" class="form-label">Event Date</label>
+                            <span class="label-required">* Required</span>
+                        </div>
+                        <div class="input-with-icon">
+                            <i data-lucide="calendar" class="input-icon-prefix"></i>
+                            <input type="date" 
+                                   id="event_date" 
+                                   name="event_date" 
+                                   class="form-control" 
+                                   value="{{ data.get('event_date', '') }}" 
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Time -->
+                    <div class="form-group">
+                        <div class="form-label-row">
+                            <label for="event_time" class="form-label">Event Time</label>
+                            <span class="label-required">* Required</span>
+                        </div>
+                        <div class="input-with-icon">
+                            <i data-lucide="clock" class="input-icon-prefix"></i>
+                            <input type="time" 
+                                   id="event_time" 
+                                   name="event_time" 
+                                   class="form-control" 
+                                   value="{{ data.get('event_time', '') }}" 
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Venue -->
+                    <div class="form-group proposal-grid-full">
+                        <div class="form-label-row">
+                            <label for="venue" class="form-label">Venue / Physical Location</label>
+                            <span class="label-required">* Required</span>
+                        </div>
+                        <div class="input-with-icon">
+                            <i data-lucide="map-pin" class="input-icon-prefix"></i>
+                            <input type="text" 
+                                   id="venue" 
+                                   name="venue" 
+                                   class="form-control" 
+                                   placeholder="e.g. Auditorium Hall B, Engineering Block"
+                                   value="{{ data.get('venue', '') }}" 
+                                   required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: ACCREDITATION POINTS & PARTICIPATION QUOTA -->
+            <div class="proposal-section">
+                <div class="proposal-section-header">
+                    <div class="proposal-section-icon">
+                        <i data-lucide="award"></i>
+                    </div>
+                    <div>
+                        <h2 class="proposal-section-title">Accreditation Points &amp; Capacity</h2>
+                        <p class="proposal-section-caption">
+                            Define the activity point value and maximum attendee registration capacity.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="proposal-grid">
+                    <!-- Points -->
+                    <div class="form-group">
+                        <div class="form-label-row">
+                            <label for="points" class="form-label">Activity Points Awarded</label>
+                            <span class="label-required">* 1–20 pts</span>
+                        </div>
+                        <div class="input-with-icon">
+                            <i data-lucide="award" class="input-icon-prefix"></i>
+                            <input type="number" 
+                                   id="points" 
+                                   name="points" 
+                                   class="form-control form-numeric-input" 
+                                   min="1" 
+                                   max="20" 
+                                   placeholder="10"
+                                   value="{{ data.get('points', '') }}" 
+                                   required>
+                        </div>
+                        <span class="form-help-text">
+                            <i data-lucide="info"></i> Typically 5–15 points depending on event duration and impact.
+                        </span>
+                    </div>
+
+                    <!-- Max Participants -->
+                    <div class="form-group">
+                        <div class="form-label-row">
+                            <label for="max_participants" class="form-label">Maximum Participants</label>
+                            <span class="label-required">* Min 1</span>
+                        </div>
+                        <div class="input-with-icon">
+                            <i data-lucide="users" class="input-icon-prefix"></i>
+                            <input type="number" 
+                                   id="max_participants" 
+                                   name="max_participants" 
+                                   class="form-control form-numeric-input" 
+                                   min="1" 
+                                   placeholder="50"
+                                   value="{{ data.get('max_participants', '') }}" 
+                                   required>
+                        </div>
+                        <span class="form-help-text">
+                            <i data-lucide="info"></i> Registrations will close when this limit is reached.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTION FOOTER -->
+            <div class="proposal-footer">
+                <a href="{{ url_for('club.dashboard') }}" class="btn btn-outline">
+                    <i data-lucide="x"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="send"></i> Submit for Approval
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

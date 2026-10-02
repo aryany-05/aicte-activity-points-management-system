@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+{% block title %}AICTE Activity & Points Management System{% endblock %}
+
+{% block content %}
+<!-- ===== HERO SECTION ===== -->
+<section class="landing-hero">
+    <div class="container">
+        <div class="landing-hero-content">
+            <div class="hero-kicker">
+                <i data-lucide="shield-check"></i>
+                <span>AICTE Activity &amp; Points Management System</span>
+            </div>
+
+            <h1 class="hero-title-ledger">
+                Centralized Platform for AICTE Activity Points
+            </h1>
+
+            <p class="hero-subtitle-ledger">
+                A centralized platform for tracking co-curricular activities, verified participation, and cumulative activity points.
+            </p>
+
+            <div class="hero-actions-ledger">
+                {% if is_logged_in %}
+                    {% if current_user.role == 'student' %}
+                        <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary btn-lg">
+                            <i data-lucide="layout-dashboard"></i> Open Student Dashboard
+                        </a>
+                        <a href="{{ url_for('student.events') }}" class="btn btn-outline btn-lg">
+                            <i data-lucide="compass"></i> Browse Events
+                        </a>
+                    {% elif current_user.role == 'club' %}
+                        <a href="{{ url_for('club.dashboard') }}" class="btn btn-primary btn-lg">
+                            <i data-lucide="layout-dashboard"></i> Open Club Dashboard
+                        </a>
+                        <a href="{{ url_for('club.create_event') }}" class="btn btn-outline btn-lg">
+                            <i data-lucide="plus-circle"></i> Create Event
+                        </a>
+                    {% elif current_user.role == 'admin' %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary btn-lg">
+                            <i data-lucide="layout-dashboard"></i> Open Admin Console
+                        </a>
+                        <a href="{{ url_for('admin.view_users') }}" class="btn btn-outline btn-lg">
+                            <i data-lucide="users"></i> View Users
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-lg">
+                        <i data-lucide="user-plus"></i> Student &amp; Club Registration
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-lg">
+                        <i data-lucide="log-in"></i> Sign In to Portal
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Key Baseline Metric Summary Strip -->
+            <div class="hero-metrics-strip">
+                <div class="hero-metric-item">
+                    <span class="hero-metric-val">100 Pts</span>
+                    <span class="hero-metric-label">Project Reference Target</span>
+                </div>
+                <div class="hero-metric-item">
+                    <span class="hero-metric-val">4</span>
+                    <span class="hero-metric-label">Activity Domains</span>
+                </div>
+                <div class="hero-metric-item">
+                    <span class="hero-metric-val">QR &amp; Roll</span>
+                    <span class="hero-metric-label">Verification</span>
+                </div>
+                <div class="hero-metric-item">
+                    <span class="hero-metric-val">Audit-Ready</span>
+                    <span class="hero-metric-label">PDF Reports</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== SECTION 1: FOUR ACTIVITY DOMAINS ===== -->
+<section class="landing-section" id="domains">
+    <div class="container">
+        <div class="section-header-ledger">
+            <span class="section-kicker">Activity Domains</span>
+            <h2 class="section-title-ledger">Four Activity Domains</h2>
+            <p class="section-desc-ledger">
+                Points are tracked across four activity domains with verified activity logs.
+            </p>
+        </div>
+
+        <div class="domains-ledger-grid">
+            <!-- Technical Domain -->
+            <div class="domain-ledger-card cat-technical">
+                <div class="domain-top-bar"></div>
+                <div class="domain-icon-box">
+                    <i data-lucide="code-2"></i>
+                </div>
+                <h3 class="domain-heading">Technical Activities</h3>
+                <p class="domain-summary">
+                    Coding competitions, technical hackathons, laboratory workshops, robotics symposiums, and engineering conferences.
+                </p>
+                <div class="domain-meta-pill">
+                    <i data-lucide="award"></i>
+                    <span>1–20 Points / Activity</span>
+                </div>
+            </div>
+
+            <!-- Cultural Domain -->
+            <div class="domain-ledger-card cat-cultural">
+                <div class="domain-top-bar"></div>
+                <div class="domain-icon-box">
+                    <i data-lucide="palette"></i>
+                </div>
+                <h3 class="domain-heading">Cultural Activities</h3>
+                <p class="domain-summary">
+                    Music, performing arts, collegiate debate, literary events, dramatic productions, and inter-college cultural festivals.
+                </p>
+                <div class="domain-meta-pill">
+                    <i data-lucide="award"></i>
+                    <span>1–20 Points / Activity</span>
+                </div>
+            </div>
+
+            <!-- Social Domain -->
+            <div class="domain-ledger-card cat-social">
+                <div class="domain-top-bar"></div>
+                <div class="domain-icon-box">
+                    <i data-lucide="heart-handshake"></i>
+                </div>
+                <h3 class="domain-heading">Social Initiatives</h3>
+                <p class="domain-summary">
+                    Blood donation camps, village community outreach, environmental drives, civic welfare, and National Service Scheme efforts.
+                </p>
+                <div class="domain-meta-pill">
+                    <i data-lucide="award"></i>
+                    <span>1–20 Points / Activity</span>
+                </div>
+            </div>
+
+            <!-- Sports Domain -->
+            <div class="domain-ledger-card cat-sports">
+                <div class="domain-top-bar"></div>
+                <div class="domain-icon-box">
+                    <i data-lucide="trophy"></i>
+                </div>
+                <h3 class="domain-heading">Sports &amp; Athletics</h3>
+                <p class="domain-summary">
+                    Inter-collegiate tournaments, fitness initiatives, athletic championships, yoga camps, and recognized sports meets.
+                </p>
+                <div class="domain-meta-pill">
+                    <i data-lucide="award"></i>
+                    <span>1–20 Points / Activity</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== SECTION 2: OPERATIONAL PROTOCOL ===== -->
+<section class="landing-section section-alt" id="protocol">
+    <div class="container">
+        <div class="section-header-ledger">
+            <span class="section-kicker">Operational Protocol</span>
+            <h2 class="section-title-ledger">Verified End-to-End Activity Workflow</h2>
+            <p class="section-desc-ledger">
+                A transparent, role-governed process from event creation through report generation.
+            </p>
+        </div>
+
+        <div class="protocol-ledger-grid">
+            <div class="protocol-step-card">
+                <span class="protocol-step-num">01</span>
+                <h3 class="protocol-step-title">Event Sanctioning</h3>
+                <p class="protocol-step-desc">
+                    Clubs publish events specifying category domain, schedule, participant capacity, and designated activity points for administrative review.
+                </p>
+            </div>
+
+            <div class="protocol-step-card">
+                <span class="protocol-step-num">02</span>
+                <h3 class="protocol-step-title">Student Registration</h3>
+                <p class="protocol-step-desc">
+                    Students discover approved activities through the event catalog, verify seat quotas, and enroll directly through their dashboard.
+                </p>
+            </div>
+
+            <div class="protocol-step-card">
+                <span class="protocol-step-num">03</span>
+                <h3 class="protocol-step-title">Attendance Verification</h3>
+                <p class="protocol-step-desc">
+                    Organizers verify student attendance on-site using dynamic session QR tokens or student roll number records.
+                </p>
+            </div>
+
+            <div class="protocol-step-card">
+                <span class="protocol-step-num">04</span>
+                <h3 class="protocol-step-title">Credit &amp; Certification</h3>
+                <p class="protocol-step-desc">
+                    Validated attendances immediately credit points to the student's tally, with downloadable participation certificates and PDF reports.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== SECTION 3: STAKEHOLDER WORKFLOWS ===== -->
+<section class="landing-section" id="roles">
+    <div class="container">
+        <div class="section-header-ledger">
+            <span class="section-kicker">Stakeholder Portals</span>
+            <h2 class="section-title-ledger">Integrated Workflows for Students, Clubs, &amp; Administrators</h2>
+            <p class="section-desc-ledger">
+                Dedicated functional tools tailored to each participant role in the system.
+            </p>
+        </div>
+
+        <div class="roles-ledger-grid">
+            <!-- Student Module -->
+            <div class="role-ledger-card">
+                <div class="role-ledger-header">
+                    <div class="role-ledger-icon">
+                        <i data-lucide="graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h3 class="role-ledger-title">Students</h3>
+                        <span class="text-muted" style="font-size: 0.8125rem;">Participant Dashboard</span>
+                    </div>
+                </div>
+                <p class="role-ledger-desc">
+                    Personalized dashboard to track co-curricular activities and progress toward the 100-point project target.
+                </p>
+                <ul class="role-ledger-list">
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>Real-time cumulative points meter toward the 100-point target</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>Filterable campus event catalog with one-click enrollment</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>QR-based attendance check-in at sanctioned events</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>PDF activity reports and participation certificates</span>
+                    </li>
+                </ul>
+                {% if is_logged_in and current_user.role == 'student' %}
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline">Go to Student Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('auth.signup') }}" class="btn btn-outline">Join as Student</a>
+                {% endif %}
+            </div>
+
+            <!-- Club Module -->
+            <div class="role-ledger-card">
+                <div class="role-ledger-header">
+                    <div class="role-ledger-icon">
+                        <i data-lucide="building-2"></i>
+                    </div>
+                    <div>
+                        <h3 class="role-ledger-title">Club Organizers</h3>
+                        <span class="text-muted" style="font-size: 0.8125rem;">Event Operations</span>
+                    </div>
+                </div>
+                <p class="role-ledger-desc">
+                    Event publishing and paperless attendance management for campus student organizations.
+                </p>
+                <ul class="role-ledger-list">
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>Event creation with category tags and designated point values</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>QR code generation for event attendance verification</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>Manual roll number search and attendance marking</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>Participant quota tracking and attendee rosters</span>
+                    </li>
+                </ul>
+                {% if is_logged_in and current_user.role == 'club' %}
+                    <a href="{{ url_for('club.dashboard') }}" class="btn btn-outline">Go to Club Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('auth.signup') }}" class="btn btn-outline">Register as Club</a>
+                {% endif %}
+            </div>
+
+            <!-- Admin Module -->
+            <div class="role-ledger-card">
+                <div class="role-ledger-header">
+                    <div class="role-ledger-icon">
+                        <i data-lucide="shield-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="role-ledger-title">Administration</h3>
+                        <span class="text-muted" style="font-size: 0.8125rem;">Governance &amp; Oversight</span>
+                    </div>
+                </div>
+                <p class="role-ledger-desc">
+                    Administrative management and event approval for platform oversight.
+                </p>
+                <ul class="role-ledger-list">
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>Event approval queue with review controls</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>Student points leaderboard and summary statistics</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>User account oversight across student and club roles</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check-circle-2"></i>
+                        <span>System-wide activity logs and point tally tracking</span>
+                    </li>
+                </ul>
+                {% if is_logged_in and current_user.role == 'admin' %}
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline">Go to Admin Console</a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Admin Portal Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== SECTION 4: PLATFORM OVERVIEW NOTICE ===== -->
+<section class="landing-section section-alt">
+    <div class="container">
+        <div class="institutional-callout-card">
+            <div class="callout-content">
+                <div class="callout-icon">
+                    <i data-lucide="award"></i>
+                </div>
+                <div>
+                    <h3 class="callout-title">Activity Points Tracking System</h3>
+                    <p class="callout-text">
+                        This system tracks student participation in campus co-curricular activities across technical, cultural, social, and sports categories toward a 100-point reference target.
+                    </p>
+                </div>
+            </div>
+            <div class="callout-actions">
+                {% if not is_logged_in %}
+                    <a href="{{ url_for('auth.signup') }}" class="btn btn-primary">Create Account</a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Sign In</a>
+                {% else %}
+                    <a href="{{ url_for('student.dashboard') if current_user.role == 'student' else (url_for('club.dashboard') if current_user.role == 'club' else url_for('admin.dashboard')) }}" class="btn btn-primary">
+                        Enter Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

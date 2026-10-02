@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% block title %}Club Operations - AICTE Points Ledger{% endblock %}
+
+{% block content %}
+<!-- ===== CLUB OPERATIONS HEADER ===== -->
+<section class="dashboard-header-ledger">
+    <div class="container">
+        <div class="ledger-banner-inner">
+            <div class="student-profile-meta">
+                <div class="student-avatar-ring">
+                    <span class="avatar-initials">{{ user.club_name[:2]|upper }}</span>
+                </div>
+                <div class="student-meta-details">
+                    <div class="student-identity-row">
+                        <h1 class="student-name">Club Operations</h1>
+                        <span class="student-status-badge status-active">
+                            <i data-lucide="shield-check"></i> Sanctioned Organizer
+                        </span>
+                    </div>
+                    <div class="student-meta-chips">
+                        <span class="meta-chip">
+                            <i data-lucide="building"></i> {{ user.club_name }}
+                        </span>
+                        <span class="meta-chip">
+                            <i data-lucide="user"></i> {{ user.full_name }}
+                        </span>
+                        <span class="meta-chip">
+                            <i data-lucide="mail"></i> {{ user.email }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-action-group">
+                <a href="{{ url_for('club.certificate_settings') }}" class="btn btn-outline">
+                    <i data-lucide="file-signature"></i> Certificate Settings
+                </a>
+                <a href="{{ url_for('club.create_event') }}" class="btn btn-primary">
+                    <i data-lucide="plus-circle"></i> Create New Event
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-4">
+    <!-- ===== OPERATIONS SUMMARY STRIP ===== -->
+    <div class="club-summary-strip">
+        <!-- Total Events -->
+        <div class="summary-metric-card">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Total Activities</span>
+                <span class="metric-head-icon"><i data-lucide="calendar"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.total_events }}</div>
+            <div class="summary-metric-sub">Proposed &amp; Sanctioned</div>
+        </div>
+
+        <!-- Approved Events -->
+        <div class="summary-metric-card accent-approved">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Approved Activities</span>
+                <span class="metric-head-icon"><i data-lucide="check-circle-2"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.approved }}</div>
+            <div class="summary-metric-sub">Active on Student Registry</div>
+        </div>
+
+        <!-- Pending Events -->
+        <div class="summary-metric-card accent-pending">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Pending Approval</span>
+                <span class="metric-head-icon"><i data-lucide="clock"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.pending }}</div>
+            <div class="summary-metric-sub">Awaiting Administrative Review</div>
+        </div>
+
+        <!-- Total Attendees -->
+        <div class="summary-metric-card accent-attendees">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Total Registrations</span>
+                <span class="metric-head-icon"><i data-lucide="users"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.total_registrations }}</div>
+            <div class="summary-metric-sub">Enrolled Across All Events</div>
+        </div>
+    </div>
+
+    <!-- ===== PENDING ACTION NOTICE (If Applicable) ===== -->
+    {% if stats.pending > 0 %}
+    <div class="callout-card callout-pending mb-4">
+        <div class="callout-content">
+            <div class="callout-icon">
+                <i data-lucide="clock"></i>
+            </div>
+            <div>
+                <h4 class="callout-heading">Proposals Under Review</h4>
+                <p class="callout-text">
+                    You have <strong>{{ stats.pending }} activity proposal{{ 's' if stats.pending != 1 else '' }}</strong> currently awaiting administrative approval. Once sanctioned, events immediately publish to the Student Activity Registry for enrollment.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ===== EVENT MANAGEMENT LEDGER ===== -->
+    <div class="card ledger-card">
+        <div class="card-header-clean table-card-header">
+            <div class="header-title-wrap">
+                <span class="header-icon-pill"><i data-lucide="scroll-text"></i></span>
+                <div>
+                    <h2 class="card-heading">Sanctioned &amp; Proposed Activities</h2>
+                    <p class="card-caption">Manage event logistics, monitor attendance rosters, and access session QR codes</p>
+                </div>
+            </div>
+            <div class="ledger-record-count">
+                <span class="badge-count">{{ events|length }} Total Records</span>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            {% if events %}
+            <div class="table-responsive">
+                <table class="table-ledger">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="min-width: 240px;">Activity Details</th>
+                            <th scope="col" style="min-width: 180px;">Schedule &amp; Venue</th>
+                            <th scope="col" style="min-width: 140px;">Approval Status</th>
+                            <th scope="col" style="min-width: 150px;" class="text-center">Capacity</th>
+                            <th scope="col" style="min-width: 220px;" class="text-right">Management Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                        <tr>
+                            <!-- Activity Details -->
+                            <td>
+                                <div class="event-name-primary">{{ event.title }}</div>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <span class="tag-category cat-{{ event.category }}">
+                                        {{ event.category|capitalize }}
+                                    </span>
+                                    <span class="chip-mono text-muted" style="font-size: 0.75rem;">
+                                        <strong>{{ event.points }}</strong> pts
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- Schedule & Venue -->
+                            <td>
+                                <div class="td-date">
+                                    <span class="date-primary">
+                                        <i data-lucide="calendar" style="width: 13px; height: 13px; display: inline-block; vertical-align: -1px; color: var(--text-muted);"></i>
+                                        {{ event.event_date.strftime('%d %b %Y') if event.event_date else 'N/A' }}
+                                    </span>
+                                </div>
+                                <div class="event-organizer-sub">
+                                    <i data-lucide="clock"></i> {{ event.event_time }}
+                                </div>
+                                {% if event.venue %}
+                                <div class="event-organizer-sub">
+                                    <i data-lucide="map-pin"></i> {{ event.venue }}
+                                </div>
+                                {% endif %}
+                            </td>
+
+                            <!-- Approval Status -->
+                            <td>
+                                {% if event.status == 'approved' %}
+                                    <span class="status-pill status-pill-verified">
+                                        <span class="status-pulse-dot"></span> Approved
+                                    </span>
+                                {% elif event.status == 'rejected' %}
+                                    <span class="status-pill status-pill-rejected">
+                                        <span class="status-rejected-dot"></span> Rejected
+                                    </span>
+                                    {% if event.rejection_reason %}
+                                    <div class="rejection-reason-sub" title="{{ event.rejection_reason }}">
+                                        <i data-lucide="alert-circle"></i>
+                                        <span>{{ event.rejection_reason }}</span>
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="status-pill status-pill-pending">
+                                        <span class="status-pending-dot"></span> Pending Review
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Capacity Track -->
+                            <td class="text-center">
+                                <div class="chip-mono font-medium" style="font-size: 0.8125rem; color: var(--text-heading);">
+                                    {{ event.registered_count }} / {{ event.max_participants }}
+                                </div>
+                                <div class="capacity-track mt-1" style="max-width: 110px; margin-left: auto; margin-right: auto;">
+                                    <div class="capacity-bar {% if event.registered_count >= event.max_participants %}capacity-full{% endif %}" 
+                                         style="width: {{ [(event.registered_count / event.max_participants * 100)|round|int, 100]|min }}%"></div>
+                                </div>
+                            </td>
+
+                            <!-- Management Actions -->
+                            <td class="text-right">
+                                <div class="table-action-group">
+                                    {% if event.status == 'approved' %}
+                                    <a href="{{ url_for('club.event_attendees', event_id=event.id) }}" 
+                                       class="btn btn-outline btn-sm" 
+                                       title="View attendee roster and scan QR code">
+                                        <i data-lucide="qr-code"></i> Attendees &amp; QR
+                                    </a>
+                                    {% endif %}
+
+                                    <a href="{{ url_for('club.edit_event', event_id=event.id) }}" 
+                                       class="btn btn-outline btn-sm" 
+                                       title="Edit event details">
+                                        <i data-lucide="pencil"></i> Edit
+                                    </a>
+
+                                    <form action="{{ url_for('club.delete_event', event_id=event.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-danger-outline btn-sm confirm-action" 
+                                                data-confirm="Are you sure you want to delete '{{ event.title }}'? This action cannot be undone.">
+                                            <i data-lucide="trash-2"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-registry-state">
+                <div class="empty-state-icon">
+                    <i data-lucide="calendar-plus"></i>
+                </div>
+                <h3 class="empty-state-heading">No Activities Proposed Yet</h3>
+                <p class="empty-state-desc">
+                    Your organization has not published or proposed any campus activities yet. Submit a proposal to start earning student participation.
+                </p>
+                <a href="{{ url_for('club.create_event') }}" class="btn btn-primary">
+                    <i data-lucide="plus-circle"></i> Create First Event
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

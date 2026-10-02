@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block title %}Certificate Settings - AICTE Points Ledger{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="page-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="registry-kicker">
+                <i data-lucide="file-signature"></i>
+                <span>Institutional Documentation</span>
+            </div>
+            <h1 class="registry-main-title">Certificate Settings</h1>
+            <p class="text-muted mt-1" style="font-size: 0.9375rem;">
+                Configure the authorized signatures rendered on official participation certificates for {{ user.club_name }}.
+            </p>
+        </div>
+        <a href="{{ url_for('club.dashboard') }}" class="btn btn-outline btn-sm">
+            <i data-lucide="arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- ===== GUIDANCE CALLOUT ===== -->
+    <div class="callout-card callout-pending mb-4">
+        <div class="callout-content">
+            <span class="callout-icon"><i data-lucide="info"></i></span>
+            <div>
+                <h2 class="callout-heading">Signature Guidelines &amp; Requirements</h2>
+                <p class="callout-text">
+                    Uploaded signatures automatically appear above the designated signatory lines on participation certificates issued for your club's events.
+                </p>
+                <div class="d-flex align-items-center gap-3 flex-wrap mt-2" style="font-size: 0.8125rem; color: var(--text-muted);">
+                    <span><i data-lucide="check" style="width: 13px; height: 13px; color: var(--brand-emerald);"></i> PNG or JPG/JPEG format</span>
+                    <span><i data-lucide="check" style="width: 13px; height: 13px; color: var(--brand-emerald);"></i> Transparent PNG recommended</span>
+                    <span><i data-lucide="check" style="width: 13px; height: 13px; color: var(--brand-emerald);"></i> Maximum file size: 2MB</span>
+                    <span><i data-lucide="check" style="width: 13px; height: 13px; color: var(--brand-emerald);"></i> Optional: Unconfigured roles display a blank signing line</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TWO SIGNATURE CARDS GRID ===== -->
+    <div class="signature-settings-grid">
+        <!-- 1. EVENT ORGANIZER SIGNATURE -->
+        <div class="card signature-card">
+            <div class="card-header-clean d-flex justify-content-between align-items-center">
+                <div class="header-title-wrap">
+                    <span class="header-icon-pill"><i data-lucide="pen-tool"></i></span>
+                    <div>
+                        <h2 class="card-heading">Event Organizer Signature</h2>
+                        <p class="card-caption">Lead signatory representing {{ user.club_name }}</p>
+                    </div>
+                </div>
+                <div>
+                    {% if has_organizer %}
+                    <span class="status-pill status-pill-verified">
+                        <span class="status-pulse-dot"></span> Configured
+                    </span>
+                    {% else %}
+                    <span class="status-pill status-pill-pending">
+                        <span class="status-pending-dot"></span> Not Configured
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                {% if has_organizer %}
+                <!-- Preview Box -->
+                <div class="signature-preview-box mb-4">
+                    <img src="{{ url_for('club.preview_signature', sig_type='organizer') }}" alt="Event Organizer Signature Preview" class="signature-preview-img">
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pt-3 border-top">
+                    <!-- Replace Form -->
+                    <form method="POST" action="{{ url_for('club.upload_signature') }}" enctype="multipart/form-data" class="d-flex align-items-center gap-2 flex-wrap flex-grow-1">
+                        <input type="hidden" name="sig_type" value="organizer">
+                        <input type="file" name="signature_file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required class="form-control form-control-sm" style="max-width: 250px;" aria-label="Select replacement image for Event Organizer">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i data-lucide="refresh-cw"></i> Replace
+                        </button>
+                    </form>
+
+                    <!-- Remove Form -->
+                    <form method="POST" action="{{ url_for('club.remove_signature') }}">
+                        <input type="hidden" name="sig_type" value="organizer">
+                        <button type="submit" class="btn btn-danger-outline btn-sm" onclick="return confirm('Remove the Event Organizer signature? Certificates will revert to a blank signing line.');">
+                            <i data-lucide="trash-2"></i> Remove
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <!-- Empty State -->
+                <div class="signature-empty-box mb-4">
+                    <div class="signature-empty-icon">
+                        <i data-lucide="pen-tool"></i>
+                    </div>
+                    <div class="font-bold text-heading" style="font-size: 0.9375rem;">No Organizer Signature</div>
+                    <p class="text-muted mt-1" style="font-size: 0.8125rem;">
+                        Certificates will generate with a blank horizontal line for manual ink signing.
+                    </p>
+                </div>
+
+                <!-- Upload Form -->
+                <form method="POST" action="{{ url_for('club.upload_signature') }}" enctype="multipart/form-data" class="d-flex align-items-center gap-2 flex-wrap">
+                    <input type="hidden" name="sig_type" value="organizer">
+                    <input type="file" name="signature_file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required class="form-control form-control-sm flex-grow-1" aria-label="Select image file for Event Organizer signature">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i data-lucide="upload"></i> Upload Signature
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 2. ADMINISTRATION SIGNATURE -->
+        <div class="card signature-card">
+            <div class="card-header-clean d-flex justify-content-between align-items-center">
+                <div class="header-title-wrap">
+                    <span class="header-icon-pill"><i data-lucide="shield-check"></i></span>
+                    <div>
+                        <h2 class="card-heading">Administration Signature</h2>
+                        <p class="card-caption">Institutional / College authority signatory</p>
+                    </div>
+                </div>
+                <div>
+                    {% if has_admin %}
+                    <span class="status-pill status-pill-verified">
+                        <span class="status-pulse-dot"></span> Configured
+                    </span>
+                    {% else %}
+                    <span class="status-pill status-pill-pending">
+                        <span class="status-pending-dot"></span> Not Configured
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                {% if has_admin %}
+                <!-- Preview Box -->
+                <div class="signature-preview-box mb-4">
+                    <img src="{{ url_for('club.preview_signature', sig_type='administration') }}" alt="Administration Signature Preview" class="signature-preview-img">
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pt-3 border-top">
+                    <!-- Replace Form -->
+                    <form method="POST" action="{{ url_for('club.upload_signature') }}" enctype="multipart/form-data" class="d-flex align-items-center gap-2 flex-wrap flex-grow-1">
+                        <input type="hidden" name="sig_type" value="administration">
+                        <input type="file" name="signature_file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required class="form-control form-control-sm" style="max-width: 250px;" aria-label="Select replacement image for Administration">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i data-lucide="refresh-cw"></i> Replace
+                        </button>
+                    </form>
+
+                    <!-- Remove Form -->
+                    <form method="POST" action="{{ url_for('club.remove_signature') }}">
+                        <input type="hidden" name="sig_type" value="administration">
+                        <button type="submit" class="btn btn-danger-outline btn-sm" onclick="return confirm('Remove the Administration signature? Certificates will revert to a blank signing line.');">
+                            <i data-lucide="trash-2"></i> Remove
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <!-- Empty State -->
+                <div class="signature-empty-box mb-4">
+                    <div class="signature-empty-icon">
+                        <i data-lucide="shield-check"></i>
+                    </div>
+                    <div class="font-bold text-heading" style="font-size: 0.9375rem;">No Administration Signature</div>
+                    <p class="text-muted mt-1" style="font-size: 0.8125rem;">
+                        Certificates will generate with a blank horizontal line for manual ink signing.
+                    </p>
+                </div>
+
+                <!-- Upload Form -->
+                <form method="POST" action="{{ url_for('club.upload_signature') }}" enctype="multipart/form-data" class="d-flex align-items-center gap-2 flex-wrap">
+                    <input type="hidden" name="sig_type" value="administration">
+                    <input type="file" name="signature_file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required class="form-control form-control-sm flex-grow-1" aria-label="Select image file for Administration signature">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i data-lucide="upload"></i> Upload Signature
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

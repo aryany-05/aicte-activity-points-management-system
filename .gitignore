@@ -1,0 +1,37 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python Bytecode & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.ruff_cache/
+.pytest_cache/
+
+# Local Environment & Secrets
+.env
+.env.local
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Runtime Uploads & Generated Documents
+static/qrcodes/*
+!static/qrcodes/.gitkeep
+static/certificates/*
+!static/certificates/.gitkeep
+static/reports/*
+!static/reports/.gitkeep
+uploads/signatures/*
+!uploads/signatures/.gitkeep
+!uploads/signatures/club_2/
+
+# OS Specific
+.DS_Store
+Thumbs.db
+.agents/ 

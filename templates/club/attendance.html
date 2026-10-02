@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% block title %}Attendance Verification - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- ===== PAGE HEADER ===== -->
+    <div class="page-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="registry-kicker">
+                <i data-lucide="shield-check"></i>
+                <span>Session Attendance Verification</span>
+            </div>
+            <h1 class="registry-main-title">Attendance Verification</h1>
+            <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                <span class="domain-badge cat-{{ event.category }}">
+                    {% if event.category == 'technical' %}
+                        <i data-lucide="code-2"></i>
+                    {% elif event.category == 'cultural' %}
+                        <i data-lucide="palette"></i>
+                    {% elif event.category == 'social' %}
+                        <i data-lucide="heart-handshake"></i>
+                    {% elif event.category == 'sports' %}
+                        <i data-lucide="trophy"></i>
+                    {% else %}
+                        <i data-lucide="tag"></i>
+                    {% endif %}
+                    {{ event.category|capitalize }}
+                </span>
+                <span class="font-bold text-heading" style="font-size: 0.9375rem;">{{ event.title }}</span>
+                <span class="meta-chip">
+                    <i data-lucide="calendar"></i> {{ event.event_date.strftime('%d %b %Y') if event.event_date else 'N/A' }}
+                </span>
+                {% if event.event_time %}
+                <span class="meta-chip">
+                    <i data-lucide="clock"></i> {{ event.event_time }}
+                </span>
+                {% endif %}
+                {% if event.venue %}
+                <span class="meta-chip">
+                    <i data-lucide="map-pin"></i> {{ event.venue }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{{ url_for('club.dashboard') }}" class="btn btn-outline btn-sm">
+            <i data-lucide="arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- ===== ATTENDANCE SUMMARY STRIP ===== -->
+    <div class="club-summary-strip">
+        <!-- Capacity -->
+        <div class="summary-metric-card">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Event Capacity</span>
+                <span class="metric-head-icon"><i data-lucide="building"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ event.max_participants }}</div>
+            <div class="summary-metric-sub">Maximum Allowed Seats</div>
+        </div>
+
+        <!-- Registered -->
+        <div class="summary-metric-card">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Total Enrolled</span>
+                <span class="metric-head-icon"><i data-lucide="users"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.total_registered }}</div>
+            <div class="summary-metric-sub">Registered Participants</div>
+        </div>
+
+        <!-- Attended -->
+        <div class="summary-metric-card accent-approved">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Verified Present</span>
+                <span class="metric-head-icon"><i data-lucide="check-circle-2"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.total_attended or 0 }}</div>
+            <div class="summary-metric-sub">Points Credited to Ledger</div>
+        </div>
+
+        <!-- Points to Award -->
+        <div class="summary-metric-card accent-pending">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Points to Award</span>
+                <span class="metric-head-icon"><i data-lucide="award"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ event.points }} pts</div>
+            <div class="summary-metric-sub">Per Verified Participant</div>
+        </div>
+    </div>
+
+    <!-- ===== TWO-COLUMN WORKSPACE: QR TERMINAL & PARTICIPANT LEDGER ===== -->
+    <div class="attendance-grid">
+        <!-- LEFT: QR TERMINAL CARD -->
+        <div class="qr-terminal-card">
+            <div class="card-header-clean">
+                <div class="header-title-wrap">
+                    <span class="header-icon-pill"><i data-lucide="qr-code"></i></span>
+                    <div>
+                        <h2 class="card-heading">QR Verification Terminal</h2>
+                        <p class="card-caption">Dynamic scan check-in for physical attendees</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body text-center p-4">
+                <p class="qr-terminal-instruction">
+                    Project this code or display it at the venue for enrolled students to scan with their device.
+                </p>
+
+                {% if qr_path %}
+                <div class="qr-code-frame">
+                    <img src="{{ url_for('static', filename=qr_path, t=qr_timestamp) if qr_timestamp else url_for('static', filename=qr_path) }}" alt="Session QR Code">
+                </div>
+                {% else %}
+                <div class="callout-card callout-pending my-3">
+                    <p class="callout-text text-warning">QR Code not generated properly.</p>
+                </div>
+                {% endif %}
+
+                <div class="mt-2">
+                    <div class="qr-points-callout">
+                        <i data-lucide="award"></i>
+                        <span>Scan Awards {{ event.points }} Points</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: PARTICIPANT LEDGER CARD -->
+        <div class="card ledger-card participant-ledger-card">
+            <div class="card-header-clean table-card-header">
+                <div class="header-title-wrap">
+                    <span class="header-icon-pill"><i data-lucide="users"></i></span>
+                    <div>
+                        <h2 class="card-heading">Registered Participants</h2>
+                        <p class="card-caption">Verify attendance manually or perform batch confirmations</p>
+                    </div>
+                </div>
+                <div class="ledger-record-count">
+                    <span class="badge-count">{{ students|length }} Registrations</span>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                {% if students %}
+                <form method="POST" action="{{ url_for('club.mark_attendance', event_id=event.id) }}" id="bulkAttendanceForm">
+                    <!-- Bulk Toolbar -->
+                    <div class="attendance-bulk-toolbar">
+                        <label for="selectAll" class="select-all-wrap">
+                            <input type="checkbox" id="selectAll">
+                            <span>Select All Unmarked</span>
+                        </label>
+
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <input type="text" 
+                                   id="participantSearchInput" 
+                                   class="participant-search-input" 
+                                   placeholder="Filter student or roll #..." 
+                                   aria-label="Filter students by keyword">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i data-lucide="check-check"></i> Mark Selected
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Table -->
+                    <div class="table-responsive table-scroll-container">
+                        <table class="table-ledger" id="participantTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 44px;" class="text-center">Select</th>
+                                    <th style="min-width: 220px;">Student Identity</th>
+                                    <th style="min-width: 140px;">Registered At</th>
+                                    <th style="min-width: 130px;" class="text-center">Status</th>
+                                    <th style="min-width: 120px;" class="text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr class="{% if student.attended %}row-verified{% endif %} participant-row"
+                                    data-name="{{ student.full_name }}"
+                                    data-roll="{{ student.roll_number }}"
+                                    data-dept="{{ student.department }}">
+                                    <!-- Checkbox / Checked Icon -->
+                                    <td class="text-center">
+                                        {% if not student.attended %}
+                                        <input type="checkbox" 
+                                               name="student_ids" 
+                                               value="{{ student.id }}" 
+                                               class="attendance-checkbox" 
+                                               aria-label="Select {{ student.full_name }}">
+                                        {% else %}
+                                        <span class="text-success" title="Verified Present">
+                                            <i data-lucide="check-circle-2"></i>
+                                        </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- Student Identity -->
+                                    <td>
+                                        <div class="event-name-primary">{{ student.full_name }}</div>
+                                        <div class="event-organizer-sub">
+                                            <span class="chip-mono font-medium">{{ student.roll_number }}</span>
+                                            <span>&bull;</span>
+                                            <span>{{ student.department }}</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Registration Timestamp -->
+                                    <td>
+                                        <span class="chip-mono text-muted" style="font-size: 0.8125rem;">
+                                            {{ student.registered_at.strftime('%d %b, %H:%M') if student.registered_at else 'N/A' }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Status Pill -->
+                                    <td class="text-center">
+                                        {% if student.attended %}
+                                        <span class="status-pill status-pill-verified">
+                                            <span class="status-pulse-dot"></span> Present
+                                        </span>
+                                        {% else %}
+                                        <span class="status-pill status-pill-pending">
+                                            <span class="status-pending-dot"></span> Pending
+                                        </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <!-- Action Button -->
+                                    <td class="text-right">
+                                        <button type="submit" 
+                                                formaction="{{ url_for('club.toggle_attendance', event_id=event.id, student_id=student.id) }}" 
+                                                class="btn btn-sm {% if student.attended %}btn-danger-outline{% else %}btn-success{% endif %}"
+                                                title="{% if student.attended %}Revoke attendance verification{% else %}Mark student as verified present{% endif %}">
+                                            {% if student.attended %}
+                                                <i data-lucide="user-minus"></i> Revoke
+                                            {% else %}
+                                                <i data-lucide="user-check"></i> Mark
+                                            {% endif %}
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+                {% else %}
+                <!-- Empty State -->
+                <div class="empty-registry-state py-5">
+                    <div class="empty-state-icon">
+                        <i data-lucide="users"></i>
+                    </div>
+                    <h3 class="empty-state-heading">No Registrations Yet</h3>
+                    <p class="empty-state-desc">
+                        When students register for this activity, their records will appear here for attendance verification.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Select All Unmarked Checkbox
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.attendance-checkbox');
+                checkboxes.forEach(cb => {
+                    // Only check visible ones if filtered
+                    const row = cb.closest('tr');
+                    if (!row || row.style.display !== 'none') {
+                        cb.checked = selectAll.checked;
+                    }
+                });
+            });
+        }
+
+        // Live Participant Filter
+        const searchInput = document.getElementById('participantSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim().toLowerCase();
+                const rows = document.querySelectorAll('.participant-row');
+                rows.forEach(row => {
+                    const name = (row.getAttribute('data-name') || '').toLowerCase();
+                    const roll = (row.getAttribute('data-roll') || '').toLowerCase();
+                    const dept = (row.getAttribute('data-dept') || '').toLowerCase();
+                    if (!query || name.includes(query) || roll.includes(query) || dept.includes(query)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

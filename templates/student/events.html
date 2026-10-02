@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% block title %}Activity Registry - AICTE Points Ledger{% endblock %}
+
+{% block content %}
+<!-- ===== REGISTRY PAGE HEADER ===== -->
+<section class="page-header-ledger">
+    <div class="container">
+        <div class="registry-header-inner">
+            <div class="registry-title-block">
+                <div class="registry-kicker">
+                    <i data-lucide="compass"></i>
+                    <span>Campus Activity Registry</span>
+                </div>
+                <h1 class="registry-main-title">Activity Registry</h1>
+                <p class="registry-subtitle">
+                    Browse approved campus activities and register for opportunities that contribute to your activity-point record.
+                </p>
+            </div>
+            
+            <div class="registry-summary-stats">
+                <div class="summary-stat-box">
+                    <span class="stat-number">{{ events|length }}</span>
+                    <span class="stat-label">Listed Activities</span>
+                </div>
+                <div class="summary-stat-box">
+                    <span class="stat-number">{{ registered_event_ids|length }}</span>
+                    <span class="stat-label">Your Registrations</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container pb-5">
+    <!-- ===== REGISTRY TOOLBAR: FILTERS & SEARCH ===== -->
+    <div class="registry-toolbar-container">
+        <div class="registry-toolbar-row">
+            <!-- Category Filter Tabs -->
+            <div class="registry-tabs-group" role="tablist" aria-label="Activity Categories">
+                <a href="{{ url_for('student.events', category='all') }}" 
+                   class="registry-tab {% if current_category == 'all' %}active{% endif %}">
+                    <i data-lucide="layers"></i>
+                    <span>All Activities</span>
+                </a>
+                <a href="{{ url_for('student.events', category='technical') }}" 
+                   class="registry-tab {% if current_category == 'technical' %}active{% endif %}">
+                    <i data-lucide="code-2"></i>
+                    <span>Technical</span>
+                </a>
+                <a href="{{ url_for('student.events', category='cultural') }}" 
+                   class="registry-tab {% if current_category == 'cultural' %}active{% endif %}">
+                    <i data-lucide="palette"></i>
+                    <span>Cultural</span>
+                </a>
+                <a href="{{ url_for('student.events', category='social') }}" 
+                   class="registry-tab {% if current_category == 'social' %}active{% endif %}">
+                    <i data-lucide="heart-handshake"></i>
+                    <span>Social</span>
+                </a>
+                <a href="{{ url_for('student.events', category='sports') }}" 
+                   class="registry-tab {% if current_category == 'sports' %}active{% endif %}">
+                    <i data-lucide="trophy"></i>
+                    <span>Sports</span>
+                </a>
+            </div>
+
+            <!-- Client-Side Search Filter -->
+            <div class="registry-search-box">
+                <i data-lucide="search" class="search-box-icon"></i>
+                <input type="text" id="eventRegistrySearch" class="registry-search-input" 
+                       placeholder="Filter by title, club, or venue..." 
+                       aria-label="Filter events by keyword">
+                <button type="button" id="clearSearchBtn" class="clear-search-btn" title="Clear filter" style="display: none;">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+        </div>
+
+        {% if current_category != 'all' %}
+        <div class="active-filter-banner">
+            <span>Filtering by domain: <strong>{{ current_category|capitalize }}</strong></span>
+            <a href="{{ url_for('student.events', category='all') }}" class="clear-category-link">
+                <i data-lucide="x-circle"></i> Clear Domain Filter
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ===== EVENTS REGISTRY GRID ===== -->
+    {% if events %}
+    <div class="cards-grid" id="eventsCardsGrid">
+        {% for event in events %}
+        <article class="event-ledger-card cat-{{ event.category }}" 
+                 data-title="{{ event.title }}" 
+                 data-club="{{ event.club_name }}" 
+                 data-venue="{{ event.venue }}" 
+                 data-desc="{{ event.description }}">
+            <div class="event-card-top-stripe"></div>
+            <div class="event-card-inner">
+                <!-- Header: Domain & Points -->
+                <div class="event-card-header-row">
+                    <span class="domain-badge cat-{{ event.category }}">
+                        {% if event.category == 'technical' %}
+                            <i data-lucide="code-2"></i>
+                        {% elif event.category == 'cultural' %}
+                            <i data-lucide="palette"></i>
+                        {% elif event.category == 'social' %}
+                            <i data-lucide="heart-handshake"></i>
+                        {% elif event.category == 'sports' %}
+                            <i data-lucide="trophy"></i>
+                        {% else %}
+                            <i data-lucide="tag"></i>
+                        {% endif %}
+                        {{ event.category|capitalize }}
+                    </span>
+
+                    <div class="event-points-cell" title="{{ event.points }} Points toward record">
+                        <span class="pts-val">{{ event.points }}</span>
+                        <span class="pts-label">POINTS</span>
+                    </div>
+                </div>
+
+                <!-- Event Title & Organizer -->
+                <h3 class="event-card-title">{{ event.title }}</h3>
+                <div class="event-organizer-meta">
+                    <i data-lucide="building-2"></i>
+                    <span>Organized by <strong>{{ event.club_name }}</strong></span>
+                </div>
+
+                <!-- Schedule & Venue Information -->
+                <div class="event-schedule-grid">
+                    <div class="schedule-item">
+                        <i data-lucide="calendar"></i>
+                        <span>{{ event.event_date.strftime('%b %d, %Y') if event.event_date else 'TBD' }}</span>
+                    </div>
+                    <div class="schedule-item">
+                        <i data-lucide="clock"></i>
+                        <span>{{ event.event_time }}</span>
+                    </div>
+                    <div class="schedule-item schedule-item-venue" title="{{ event.venue }}">
+                        <i data-lucide="map-pin"></i>
+                        <span>{{ event.venue }}</span>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <p class="event-card-desc">{{ event.description }}</p>
+
+                <!-- Capacity & Enrollment Track -->
+                <div class="event-capacity-section">
+                    <div class="capacity-header">
+                        <span><i data-lucide="users"></i> Attendance Capacity</span>
+                        <span class="capacity-count">{{ event.registered_count }} / {{ event.max_participants }}</span>
+                    </div>
+                    <div class="capacity-track">
+                        <div class="capacity-bar {% if event.registered_count >= event.max_participants %}capacity-full{% endif %}" 
+                             style="width: {{ [(event.registered_count / event.max_participants * 100)|round|int, 100]|min }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Registration Action / Status -->
+                <div class="event-card-footer">
+                    {% if event.id in registered_event_ids %}
+                        {% if today and event.event_date and event.event_date < today %}
+                            <div class="status-enrolled-pill" title="You are registered for this activity. The event date has passed and registration is closed.">
+                                <i data-lucide="check-circle-2"></i>
+                                <span>Registered &bull; Event Completed &bull; Registration Closed</span>
+                            </div>
+                        {% else %}
+                            <div class="status-enrolled-pill">
+                                <i data-lucide="check-circle-2"></i>
+                                <span>Registered &bull; Attend to Claim Points</span>
+                            </div>
+                        {% endif %}
+                    {% elif today and event.event_date and event.event_date < today %}
+                        <button class="btn btn-secondary btn-block" disabled title="The event date for this activity has passed.">
+                            <i data-lucide="calendar-x"></i> Registration Closed
+                        </button>
+                    {% elif event.registered_count >= event.max_participants %}
+                        <button class="btn btn-secondary btn-block" disabled>
+                            <i data-lucide="user-x"></i> Registration Full
+                        </button>
+                    {% else %}
+                        <form action="{{ url_for('student.register_event', event_id=event.id) }}" method="POST">
+                            <button type="submit" class="btn btn-primary btn-block confirm-action" 
+                                    data-confirm="Confirm registration for '{{ event.title }}'?">
+                                <i data-lucide="user-plus"></i> Register for Activity
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <!-- Container for when live keyword search returns 0 results -->
+    <div id="noLiveSearchResults" class="empty-registry-state mt-4" style="display: none;">
+        <div class="empty-state-icon">
+            <i data-lucide="search-x"></i>
+        </div>
+        <h3 class="empty-state-heading">No Matching Activities</h3>
+        <p class="empty-state-desc">
+            No approved activities match your keyword search. Try refining your search query.
+        </p>
+    </div>
+
+    {% else %}
+    <!-- Server-Side Empty State -->
+    <div class="empty-registry-state">
+        <div class="empty-state-icon">
+            <i data-lucide="folder-search"></i>
+        </div>
+        <h3 class="empty-state-heading">No Activities Recorded</h3>
+        <p class="empty-state-desc">
+            There are currently no approved activities matching the selected domain filter.
+        </p>
+        {% if current_category != 'all' %}
+            <a href="{{ url_for('student.events', category='all') }}" class="btn btn-outline">
+                <i data-lucide="layers"></i> View All Activities
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

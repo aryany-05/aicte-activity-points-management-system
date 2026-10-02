@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard - AICTE Points Ledger{% endblock %}
+
+{% block content %}
+<!-- Academic Student Banner -->
+<section class="dashboard-header-ledger">
+    <div class="container">
+        <div class="ledger-banner-inner">
+            <div class="student-profile-meta">
+                <div class="student-avatar-ring">
+                    <span class="avatar-initials">{{ user.full_name[:2]|upper }}</span>
+                </div>
+                <div class="student-meta-details">
+                    <div class="student-identity-row">
+                        <h1 class="student-name">{{ user.full_name }}</h1>
+                        <span class="student-status-badge {% if total_points >= max_points %}status-certified{% else %}status-active{% endif %}">
+                            <i data-lucide="{% if total_points >= max_points %}check-circle-2{% else %}clock{% endif %}"></i>
+                            {% if total_points >= max_points %}Target Achieved{% else %}In Progress{% endif %}
+                        </span>
+                    </div>
+                    <div class="student-meta-chips">
+                        <span class="meta-chip">
+                            <i data-lucide="book-open"></i> {{ user.department }}
+                        </span>
+                        <span class="meta-chip chip-mono">
+                            <i data-lucide="hash"></i> {{ user.roll_number }}
+                        </span>
+                        <span class="meta-chip">
+                            <i data-lucide="mail"></i> {{ user.email }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-action-group">
+                <a href="{{ url_for('student.events') }}" class="btn btn-primary">
+                    <i data-lucide="compass"></i> Browse Events
+                </a>
+                <a href="{{ url_for('student.download_report') }}" class="btn btn-outline" target="_blank">
+                    <i data-lucide="file-down"></i> Official Report
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-4">
+    <!-- Top Grid: Points Meter & Category Breakdown -->
+    <div class="ledger-metrics-grid">
+        <!-- Main Points Gauge Card -->
+        <div class="card ledger-card points-meter-card">
+            <div class="card-header-clean">
+                <div class="header-title-wrap">
+                    <span class="header-icon-pill"><i data-lucide="award"></i></span>
+                    <div>
+                        <h2 class="card-heading">AICTE Activity Points</h2>
+                        <p class="card-caption">Cumulative activity tally toward institutional requirement</p>
+                    </div>
+                </div>
+                <span class="metric-percent-chip">{{ progress|round|int }}%</span>
+            </div>
+
+            <div class="card-body">
+                <div class="points-hero-display">
+                    <div class="points-num-wrap">
+                        <span class="points-metric-val">{{ total_points }}</span>
+                        <span class="points-metric-target">/ {{ max_points }}</span>
+                    </div>
+                    <span class="points-unit-label">Earned Points</span>
+                </div>
+
+                <!-- Precision Progress Track -->
+                <div class="progress-track-wrapper">
+                    <div class="progress-bar-ledger">
+                        <div class="progress-fill-ledger" style="width: {{ progress }}%"></div>
+                    </div>
+                    <!-- Generic Milestone Ticks -->
+                    <div class="milestone-markers">
+                        <div class="marker-item {% if progress >= 25 %}marker-reached{% endif %}">
+                            <span class="marker-dot"></span>
+                            <span class="marker-label">25 pts</span>
+                        </div>
+                        <div class="marker-item {% if progress >= 50 %}marker-reached{% endif %}">
+                            <span class="marker-dot"></span>
+                            <span class="marker-label">50 pts</span>
+                        </div>
+                        <div class="marker-item {% if progress >= 75 %}marker-reached{% endif %}">
+                            <span class="marker-dot"></span>
+                            <span class="marker-label">75 pts</span>
+                        </div>
+                        <div class="marker-item {% if progress >= 100 %}marker-reached{% endif %}">
+                            <span class="marker-dot"></span>
+                            <span class="marker-label">100 Target</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Summary Note -->
+                <div class="points-footer-status">
+                    {% if total_points >= max_points %}
+                        <div class="status-callout callout-success">
+                            <i data-lucide="check-check"></i>
+                            <span>You have satisfied the full {{ max_points }}-point AICTE target. Official audit report is ready for submission.</span>
+                        </div>
+                    {% else %}
+                        <div class="status-callout callout-neutral">
+                            <i data-lucide="info"></i>
+                            <span>{{ max_points - total_points }} additional points required to complete the {{ max_points }}-point requirement.</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Distribution Card -->
+        <div class="card ledger-card category-ledger-card">
+            <div class="card-header-clean">
+                <div class="header-title-wrap">
+                    <span class="header-icon-pill"><i data-lucide="pie-chart"></i></span>
+                    <div>
+                        <h2 class="card-heading">Category Distribution</h2>
+                        <p class="card-caption">Points breakdown across 4 activity domains</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="category-breakdown-list">
+                    <!-- Technical -->
+                    <div class="category-row">
+                        <div class="category-row-head">
+                            <div class="category-title-group">
+                                <span class="category-indicator cat-technical"></span>
+                                <span class="category-title">Technical</span>
+                            </div>
+                            <span class="category-val-chip">{{ category_points.get('technical', 0) }} pts</span>
+                        </div>
+                        <div class="category-meter-track">
+                            <div class="category-meter-fill cat-technical" style="width: {{ [(category_points.get('technical', 0)|float * 2.5), 100]|min }}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Cultural -->
+                    <div class="category-row">
+                        <div class="category-row-head">
+                            <div class="category-title-group">
+                                <span class="category-indicator cat-cultural"></span>
+                                <span class="category-title">Cultural</span>
+                            </div>
+                            <span class="category-val-chip">{{ category_points.get('cultural', 0) }} pts</span>
+                        </div>
+                        <div class="category-meter-track">
+                            <div class="category-meter-fill cat-cultural" style="width: {{ [(category_points.get('cultural', 0)|float * 2.5), 100]|min }}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Social / Community -->
+                    <div class="category-row">
+                        <div class="category-row-head">
+                            <div class="category-title-group">
+                                <span class="category-indicator cat-social"></span>
+                                <span class="category-title">Social / Community</span>
+                            </div>
+                            <span class="category-val-chip">{{ category_points.get('social', 0) }} pts</span>
+                        </div>
+                        <div class="category-meter-track">
+                            <div class="category-meter-fill cat-social" style="width: {{ [(category_points.get('social', 0)|float * 2.5), 100]|min }}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Sports -->
+                    <div class="category-row">
+                        <div class="category-row-head">
+                            <div class="category-title-group">
+                                <span class="category-indicator cat-sports"></span>
+                                <span class="category-title">Sports</span>
+                            </div>
+                            <span class="category-val-chip">{{ category_points.get('sports', 0) }} pts</span>
+                        </div>
+                        <div class="category-meter-track">
+                            <div class="category-meter-fill cat-sports" style="width: {{ [(category_points.get('sports', 0)|float * 2.5), 100]|min }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="category-meta-note">
+                    <i data-lucide="layers"></i>
+                    <span>Events are accredited per AICTE co-curricular guidelines across technical, cultural, social, and sports categories.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event History Ledger Table -->
+    <div class="card ledger-card event-history-card mt-4">
+        <div class="card-header-clean table-card-header">
+            <div class="header-title-wrap">
+                <span class="header-icon-pill"><i data-lucide="scroll-text"></i></span>
+                <div>
+                    <h2 class="card-heading">Activity &amp; Participation Ledger</h2>
+                    <p class="card-caption">Official record of registered and verified events</p>
+                </div>
+            </div>
+            <div class="ledger-record-count">
+                <span class="badge-count">{{ event_history|length }} Total Records</span>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            {% if event_history %}
+            <div class="table-responsive">
+                <table class="table-ledger">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="th-date">Event Date</th>
+                            <th scope="col" class="th-event">Event &amp; Organizing Club</th>
+                            <th scope="col" class="th-category">Domain</th>
+                            <th scope="col" class="th-status">Attendance</th>
+                            <th scope="col" class="th-points text-right">Points</th>
+                            <th scope="col" class="th-action text-right">Certificate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in event_history %}
+                        <tr>
+                            <td class="td-date">
+                                <span class="date-primary">{{ event.event_date.strftime('%d %b %Y') if event.event_date else 'N/A' }}</span>
+                            </td>
+                            <td class="td-event">
+                                <div class="event-name-primary">{{ event.title }}</div>
+                                <div class="event-organizer-sub">
+                                    <i data-lucide="shield"></i> {{ event.club_name }}
+                                </div>
+                            </td>
+                            <td class="td-category">
+                                <span class="tag-category cat-{{ event.category }}">
+                                    {{ event.category|capitalize }}
+                                </span>
+                            </td>
+                            <td class="td-status">
+                                {% if event.attended %}
+                                    <span class="status-pill status-pill-verified">
+                                        <span class="status-pulse-dot"></span> Verified
+                                    </span>
+                                {% else %}
+                                    <span class="status-pill status-pill-pending">
+                                        <span class="status-pending-dot"></span> Registered
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="td-points text-right">
+                                {% if event.points_awarded > 0 %}
+                                    <span class="points-awarded-text">+{{ event.points_awarded }}</span>
+                                {% else %}
+                                    <span class="points-pending-text">0</span>
+                                {% endif %}
+                            </td>
+                            <td class="td-action text-right">
+                                {% if event.attended %}
+                                    <a href="{{ url_for('student.download_certificate', event_id=event.id) }}" 
+                                       class="btn-ledger-action" 
+                                       title="Download official participation certificate for {{ event.title }}">
+                                        <i data-lucide="file-badge"></i> Certificate
+                                    </a>
+                                {% else %}
+                                    <span class="action-muted-notice" title="Attendance must be marked before certificate becomes available">
+                                        <i data-lucide="clock-3"></i> Awaiting Attendance
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="ledger-empty-state">
+                <div class="empty-icon-box">
+                    <i data-lucide="calendar-x"></i>
+                </div>
+                <h3 class="empty-title">No Participation Records Found</h3>
+                <p class="empty-desc">You have not registered for any events yet. Explore upcoming accredited events to earn AICTE points.</p>
+                <a href="{{ url_for('student.events') }}" class="btn btn-primary mt-3">
+                    <i data-lucide="compass"></i> Explore Upcoming Events
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

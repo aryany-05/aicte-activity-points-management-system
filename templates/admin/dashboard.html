@@ -1,0 +1,423 @@
+{% extends 'base.html' %}
+{% block title %}Admin Operations Console - AICTE Points Ledger{% endblock %}
+
+{% block content %}
+<!-- ===== ADMIN OPERATIONS HEADER ===== -->
+<section class="dashboard-header-ledger">
+    <div class="container">
+        <div class="ledger-banner-inner">
+            <div class="student-profile-meta">
+                <div class="student-avatar-ring">
+                    <span class="avatar-initials">AD</span>
+                </div>
+                <div class="student-meta-details">
+                    <div class="student-identity-row">
+                        <h1 class="student-name">Academic Operations Console</h1>
+                        <span class="student-status-badge status-certified">
+                            <i data-lucide="shield-check"></i> System Administrator
+                        </span>
+                    </div>
+                    <div class="student-meta-chips">
+                        <span class="meta-chip">
+                            <i data-lucide="user"></i> {{ current_user.full_name }}
+                        </span>
+                        <span class="meta-chip">
+                            <i data-lucide="shield"></i> System Administration
+                        </span>
+                        <span class="meta-chip">
+                            <i data-lucide="activity"></i> Activity Administration
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-action-group">
+                <a href="{{ url_for('admin.view_users') }}" class="btn btn-outline">
+                    <i data-lucide="users"></i> Manage Users
+                </a>
+                <a href="{{ url_for('admin.leaderboard') }}" class="btn btn-outline">
+                    <i data-lucide="trophy"></i> Activity Leaderboard
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-4">
+    <!-- ===== OPERATIONAL METRICS STRIP ===== -->
+    <div class="admin-summary-strip">
+        <!-- 1. Total Students -->
+        <div class="summary-metric-card">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Students Enrolled</span>
+                <span class="metric-head-icon"><i data-lucide="users"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.total_students }}</div>
+            <div class="summary-metric-sub">Registered Students</div>
+        </div>
+
+        <!-- 2. Total Clubs -->
+        <div class="summary-metric-card">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Total Clubs</span>
+                <span class="metric-head-icon"><i data-lucide="building"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.total_clubs }}</div>
+            <div class="summary-metric-sub">Active Campus Organizations</div>
+        </div>
+
+        <!-- 3. Approved Events -->
+        <div class="summary-metric-card accent-approved">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Approved Activities</span>
+                <span class="metric-head-icon"><i data-lucide="check-circle-2"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.approved_events }}</div>
+            <div class="summary-metric-sub">Published on Registry</div>
+        </div>
+
+        <!-- 4. Pending Events -->
+        <div class="summary-metric-card {% if stats.pending_events > 0 %}accent-pending{% endif %}">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Pending Activities</span>
+                <span class="metric-head-icon"><i data-lucide="clock"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.pending_events }}</div>
+            <div class="summary-metric-sub">Awaiting Approval</div>
+        </div>
+
+        <!-- 5. Total Registrations -->
+        <div class="summary-metric-card accent-attendees">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Total Enrollments</span>
+                <span class="metric-head-icon"><i data-lucide="user-check"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.total_registrations }}</div>
+            <div class="summary-metric-sub">Across All Activities</div>
+        </div>
+
+        <!-- 6. Total Points Awarded -->
+        <div class="summary-metric-card accent-points">
+            <div class="metric-card-top-accent"></div>
+            <div class="summary-metric-head">
+                <span class="summary-metric-label">Total Points Awarded</span>
+                <span class="metric-head-icon"><i data-lucide="award"></i></span>
+            </div>
+            <div class="summary-metric-num">{{ stats.total_points_awarded }}</div>
+            <div class="summary-metric-sub">Recorded Activity Points</div>
+        </div>
+    </div>
+
+    <!-- ===== PENDING ACTION NOTICE (If Any) ===== -->
+    {% if stats.pending_events > 0 %}
+    <div class="callout-card callout-pending mb-4">
+        <div class="callout-content">
+            <div class="callout-icon">
+                <i data-lucide="clock"></i>
+            </div>
+            <div>
+                <h2 class="callout-title" style="font-size: 1rem;">Action Required: {{ stats.pending_events }} Activit{{ 'ies' if stats.pending_events != 1 else 'y' }} Awaiting Approval</h2>
+                <p class="callout-text mb-0">
+                    Club organizers have submitted activities for administrative approval. Review the activity details, point allocations, and venue requirements in the queue below.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ===== PENDING APPROVALS QUEUE ===== -->
+    <div class="card mb-4">
+        <div class="card-header-clean">
+            <div class="header-title-wrap">
+                <span class="header-icon-pill"><i data-lucide="clock"></i></span>
+                <div>
+                    <h2 class="card-heading">Pending Approvals Queue</h2>
+                    <p class="card-caption">Activities submitted by clubs awaiting administrative approval</p>
+                </div>
+            </div>
+            <div>
+                <span class="badge-count">{{ pending_events|length }} Activit{{ 'ies' if pending_events|length != 1 else 'y' }}</span>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            {% if pending_events %}
+            <div class="table-responsive">
+                <table class="table-ledger mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">Proposed Date &amp; Schedule</th>
+                            <th style="width: 42%;">Activity Specification</th>
+                            <th style="width: 18%;">Organizing Club</th>
+                            <th style="width: 18%; text-align: right;">Administrative Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in pending_events %}
+                        <tr>
+                            <td class="td-date">
+                                <div class="date-primary">{{ event.event_date.strftime('%b %d, %Y') if event.event_date else 'N/A' }}</div>
+                                <div class="text-muted small mt-1 d-flex align-items-center gap-1">
+                                    <i data-lucide="clock" style="width: 12px; height: 12px;"></i>
+                                    <span>{{ event.event_time or 'TBD' }}</span>
+                                </div>
+                                <div class="text-muted small mt-1 d-flex align-items-center gap-1">
+                                    <i data-lucide="map-pin" style="width: 12px; height: 12px;"></i>
+                                    <span>{{ event.venue or 'Campus Venue' }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="event-name-primary mb-1">{{ event.title }}</div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                                    <span class="domain-badge cat-{{ event.category }}">
+                                        <i data-lucide="tag"></i> {{ event.category|capitalize }}
+                                    </span>
+                                    <span class="badge-count" style="color: var(--brand-brass); font-weight: 700;">
+                                        {{ event.points }} pts
+                                    </span>
+                                    <span class="badge-count">
+                                        <i data-lucide="users" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle;"></i> Cap: {{ event.max_participants }}
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-0 line-clamp-2" style="max-width: 520px; line-height: 1.45;">
+                                    {{ event.description }}
+                                </p>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="header-icon-pill" style="width: 28px; height: 28px; flex-shrink: 0;">
+                                        <i data-lucide="building" style="width: 13px; height: 13px;"></i>
+                                    </span>
+                                    <span class="font-bold text-heading" style="font-size: 0.875rem;">{{ event.club_name }}</span>
+                                </div>
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="d-flex align-items-center justify-content-end gap-2 flex-wrap">
+                                    <form action="{{ url_for('admin.approve_event', event_id=event.id) }}" method="POST" style="margin: 0;">
+                                        <button type="submit" class="btn btn-success btn-sm confirm-action"
+                                                data-confirm="Approve '{{ event.title }}'? It will instantly be published on the Student Activity Registry.">
+                                            <i data-lucide="check"></i> Approve
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-danger-outline btn-sm"
+                                            onclick="toggleElement('rejectForm-{{ event.id }}')"
+                                            aria-expanded="false"
+                                            aria-controls="rejectForm-{{ event.id }}">
+                                        <i data-lucide="x"></i> Reject
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Inline Rejection Form Drawer -->
+                        <tr id="rejectForm-{{ event.id }}" style="display: none;" class="rejection-drawer-row">
+                            <td colspan="4" class="p-3">
+                                <div class="rejection-drawer-box">
+                                    <div class="rejection-drawer-header">
+                                        <span class="rejection-drawer-icon"><i data-lucide="alert-triangle"></i></span>
+                                        <div>
+                                            <div class="font-bold text-heading" style="font-size: 0.875rem;">Rejection Feedback for "{{ event.title }}"</div>
+                                            <p class="text-muted mb-0" style="font-size: 0.75rem;">Specify a reason for rejecting this activity. The club organizer will receive this rationale.</p>
+                                        </div>
+                                    </div>
+                                    <form action="{{ url_for('admin.reject_event', event_id=event.id) }}" method="POST" class="d-flex align-items-center gap-2 flex-wrap mt-2">
+                                        <input type="text" name="reason" class="form-control form-control-sm flex-grow-1"
+                                               placeholder="Specify reason for rejection (Required)..." required
+                                               aria-label="Reason for rejection">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i data-lucide="send"></i> Confirm Rejection
+                                        </button>
+                                        <button type="button" class="btn btn-outline btn-sm" onclick="toggleElement('rejectForm-{{ event.id }}')">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center text-muted">
+                <div class="empty-state-icon mb-3">
+                    <i data-lucide="check-circle-2"></i>
+                </div>
+                <div class="font-bold text-heading" style="font-size: 1.05rem;">Approval Queue Clear</div>
+                <p class="text-muted mt-1 mb-0" style="font-size: 0.875rem; max-width: 480px; margin: 0 auto; line-height: 1.5;">
+                    All submitted activities have been reviewed. New activities submitted by clubs will appear here for administrative approval.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ===== DUAL WORKSPACE: TOP STUDENTS & ACTIVITY LEDGER ===== -->
+    <div class="admin-dual-grid mb-4">
+        <!-- Column 1: Top Point Earners -->
+        <div class="card">
+            <div class="card-header-clean">
+                <div class="header-title-wrap">
+                    <span class="header-icon-pill"><i data-lucide="trophy"></i></span>
+                    <div>
+                        <h2 class="card-heading">Top Point Earners</h2>
+                        <p class="card-caption">Leading student participants by cumulative points</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('admin.leaderboard') }}" class="btn btn-outline btn-sm">
+                    <span>Full Leaderboard</span> <i data-lucide="arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table-ledger mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 12%; text-align: center;">#</th>
+                                <th style="width: 48%;">Student Details</th>
+                                <th style="width: 24%;">Department</th>
+                                <th style="width: 16%; text-align: right;">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in leaderboard %}
+                            <tr>
+                                <td style="text-align: center;">
+                                    <span class="rank-badge {% if loop.index == 1 %}rank-first{% elif loop.index == 2 %}rank-second{% elif loop.index == 3 %}rank-third{% endif %}">
+                                        {{ loop.index }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="font-bold text-heading">{{ student.full_name }}</div>
+                                    <div class="text-muted small" style="font-family: var(--font-mono);">{{ student.roll_number }}</div>
+                                </td>
+                                <td>
+                                    <span class="text-body small">{{ student.department or 'General' }}</span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <span class="font-bold text-heading" style="font-family: var(--font-mono); color: var(--brand-brass);">
+                                        {{ student.total_points }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="p-4 text-center text-muted">
+                                    No student point records registered yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 2: Activity Ledger (Recent Events) -->
+        <div class="card">
+            <div class="card-header-clean">
+                <div class="header-title-wrap">
+                    <span class="header-icon-pill"><i data-lucide="calendar"></i></span>
+                    <div>
+                        <h2 class="card-heading">Activity Ledger</h2>
+                        <p class="card-caption">Recent activities across campus clubs</p>
+                    </div>
+                </div>
+                <div>
+                    <span class="badge-count">{{ all_events|length }} Total</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table-ledger mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 44%;">Activity &amp; Club</th>
+                                <th style="width: 22%;">Domain</th>
+                                <th style="width: 20%;">Status</th>
+                                <th style="width: 14%; text-align: right;">Enrollment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in all_events[:10] %}
+                            <tr>
+                                <td>
+                                    <div class="font-bold text-heading line-clamp-1" title="{{ event.title }}">{{ event.title }}</div>
+                                    <div class="event-organizer-sub">
+                                        <i data-lucide="building"></i>
+                                        <span>{{ event.club_name }}</span>
+                                    </div>
+                                    {% if event.status == 'rejected' and event.rejection_reason %}
+                                    <div class="text-danger small mt-1" style="font-size: 0.75rem;">
+                                        <i data-lucide="alert-circle" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle;"></i>
+                                        <span>{{ event.rejection_reason }}</span>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="domain-badge cat-{{ event.category }}">
+                                        {{ event.category|capitalize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if event.status == 'approved' %}
+                                        <span class="status-pill status-pill-verified">
+                                            <span class="status-pulse-dot"></span> Approved
+                                        </span>
+                                    {% elif event.status == 'rejected' %}
+                                        <span class="status-pill status-pill-rejected">
+                                            <span class="status-rejected-dot"></span> Rejected
+                                        </span>
+                                    {% else %}
+                                        <span class="status-pill status-pill-pending">
+                                            <span class="status-pending-dot"></span> Pending
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right;">
+                                    <span class="text-body small" style="font-family: var(--font-mono);">
+                                        {{ event.registered_count }}/{{ event.max_participants }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="p-4 text-center text-muted">
+                                    No activities recorded yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if all_events|length > 10 %}
+                <div class="p-3 text-center border-top" style="background-color: var(--bg-surface-elevated);">
+                    <span class="text-muted small">Displaying 10 most recent activities</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleElement(id) {
+        var x = document.getElementById(id);
+        if (!x) return;
+        if (x.style.display === "none" || x.style.display === "") {
+            x.style.display = "table-row";
+            var input = x.querySelector('input[name="reason"]');
+            if (input) input.focus();
+        } else {
+            x.style.display = "none";
+        }
+    }
+</script>
+{% endblock %}
